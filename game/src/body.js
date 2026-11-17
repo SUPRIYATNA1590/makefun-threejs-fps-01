@@ -3,7 +3,7 @@
 // body whole. The player and every bot move through this same code, with the same
 // acceleration, friction, gravity, crouch and jump; only the source of the wishes
 // differs — keys for the player, the brain for a bot.
-import * as THREE from 'three';
+import * as THREE from "three";
 
 const RADIUS = 0.34;
 export const STAND_HEIGHT = 1.72;
@@ -38,16 +38,25 @@ export function createBody(colliders, x, z, yaw = 0) {
   // walking into a wall, and a low ceiling does not read as a floor.
   function overlaps(xPos, yPos, zPos, height, lift) {
     probe.min.set(xPos - RADIUS, yPos + lift, zPos - RADIUS);
-    probe.max.set(xPos + RADIUS, yPos + height - lift, zPos + RADIUS);
+    probe.max.set(
+      xPos + RADIUS,
+      yPos + height - lift,
+      zPos + RADIUS,
+    );
     for (const collider of colliders) {
-      if (probe.intersectsBox(collider)) return collider;
+      if (probe.intersectsBox(collider)) {
+        return collider;
+      }
     }
     return null;
   }
 
   function look(dx, dy, sensitivity = 0.0022) {
     body.yaw -= dx * sensitivity;
-    body.pitch = Math.max(-1.45, Math.min(1.45, body.pitch - dy * sensitivity));
+    body.pitch = Math.max(
+      -1.45,
+      Math.min(1.45, body.pitch - dy * sensitivity),
+    );
   }
 
   function step(dt, input) {
@@ -56,8 +65,17 @@ export function createBody(colliders, x, z, yaw = 0) {
     if (input.crouch && !body.crouching) {
       body.crouching = true;
       body.height = CROUCH_HEIGHT;
-    } else if (!input.crouch && body.crouching
-      && !overlaps(body.position.x, body.position.y, body.position.z, STAND_HEIGHT, 0.02)) {
+    } else if (
+      !input.crouch
+      && body.crouching
+      && !overlaps(
+        body.position.x,
+        body.position.y,
+        body.position.z,
+        STAND_HEIGHT,
+        0.02,
+      )
+    ) {
       body.crouching = false;
       body.height = STAND_HEIGHT;
     }
@@ -69,7 +87,13 @@ export function createBody(colliders, x, z, yaw = 0) {
     if (input.forward || input.strafe) {
       const sin = Math.sin(body.yaw);
       const cos = Math.cos(body.yaw);
-      wish.set(-sin * input.forward + cos * input.strafe, 0, -cos * input.forward - sin * input.strafe).normalize();
+      wish
+        .set(
+          -sin * input.forward + cos * input.strafe,
+          0,
+          -cos * input.forward - sin * input.strafe,
+        )
+        .normalize();
     }
 
     const speed = body.crouching ? CROUCH_SPEED : WALK_SPEED;
@@ -92,13 +116,17 @@ export function createBody(colliders, x, z, yaw = 0) {
     // Move one axis at a time; a blocked axis stops dead instead of sliding
     // through the wall, and the other axis still moves.
     const nextX = body.position.x + body.velocity.x * dt;
-    if (!overlaps(nextX, body.position.y, body.position.z, body.height, 0.04)) {
+    if (
+      !overlaps(nextX, body.position.y, body.position.z, body.height, 0.04)
+    ) {
       body.position.x = nextX;
     } else {
       body.velocity.x = 0;
     }
     const nextZ = body.position.z + body.velocity.z * dt;
-    if (!overlaps(body.position.x, body.position.y, nextZ, body.height, 0.04)) {
+    if (
+      !overlaps(body.position.x, body.position.y, nextZ, body.height, 0.04)
+    ) {
       body.position.z = nextZ;
     } else {
       body.velocity.z = 0;
@@ -108,7 +136,13 @@ export function createBody(colliders, x, z, yaw = 0) {
     // bottom when jumping into it, and never fall through the floor at y = 0.
     body.position.y += body.velocity.y * dt;
     body.onGround = false;
-    const hit = overlaps(body.position.x, body.position.y, body.position.z, body.height, 0);
+    const hit = overlaps(
+      body.position.x,
+      body.position.y,
+      body.position.z,
+      body.height,
+      0,
+    );
     if (hit && body.velocity.y <= 0) {
       body.position.y = hit.max.y;
       body.velocity.y = 0;
